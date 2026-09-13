@@ -99,7 +99,7 @@ int ArgusSendSaslString(FILE *, const char *, int, int);
 int
 ArgusAuthenticateClient (struct ArgusClientData *client)
 {
-   int retn = 1;
+   int retn = 0;
 
 #ifdef ARGUS_SASL
    unsigned int rlen = 0;
@@ -131,14 +131,14 @@ ArgusAuthenticateClient (struct ArgusClientData *client)
 #ifdef ARGUSDEBUG
       ArgusDebug (2, "ArgusAuthenticateClient: Error ArgusGetSaslString returned %d\n", len);
 #endif
-      return 0;
+      return -1;
    }
 
    if ((len = ArgusGetSaslString (in, buf, sizeof(buf))) <= 0)  {
 #ifdef ARGUSDEBUG
       ArgusDebug (2, "ArgusAuthenticateClient: Error ArgusGetSaslString returned %d\n", len);
 #endif
-      return 0;
+      return -1;
    }
 
    if (*buf == 'Y') {
@@ -146,7 +146,7 @@ ArgusAuthenticateClient (struct ArgusClientData *client)
 #ifdef ARGUSDEBUG
          ArgusDebug (2, "ArgusAuthenticateClient: Error ArgusGetSaslString returned %d\n", len);
 #endif
-         return 0;
+         return -1;
       }
       retn = sasl_server_start(conn, chosenmech, buf, len, &data, &rlen);
 
@@ -160,7 +160,7 @@ ArgusAuthenticateClient (struct ArgusClientData *client)
       ArgusDebug (2, "ArgusAuthenticateClient: Error starting SASL negotiation");
 #endif
       ArgusSendSaslString(out, buf, strlen(buf), retn);
-      return 0;
+      return -1;
    }
 
    while (retn == SASL_CONTINUE) {
@@ -184,7 +184,7 @@ ArgusAuthenticateClient (struct ArgusClientData *client)
 #ifdef ARGUSDEBUG
          ArgusDebug(2, "client disconnected ...\n");
 #endif
-         return 0;
+         return -1;
       }
 
       retn = sasl_server_step(conn, buf, len, &data, &rlen);
@@ -194,12 +194,14 @@ ArgusAuthenticateClient (struct ArgusClientData *client)
          ArgusDebug(2, "Authentication failed %s\n", sasl_errstring(retn, NULL, NULL));
 #endif
          ArgusSendSaslString(out, buf, strlen(buf), retn);
-         return 0;
+         return -1;
       }
    }
 
    if (retn == SASL_OK)
       ArgusSendSaslString(out, NULL, 0, SASL_OK);
+
+   retn = 0;
 
 no_auth:
 #endif
