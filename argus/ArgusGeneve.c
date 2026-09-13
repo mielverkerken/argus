@@ -61,7 +61,6 @@ struct genevehdr {
 
 #define VER_SHIFT 6
 #define HDR_OPTS_LEN_MASK 0x3F
-#define OPT_LEN_MASK 0x1F
 
 extern void *ArgusCreateIPv4Flow (struct ArgusModelerStruct *, struct ip *);
 extern void *ArgusCreateIPv6Flow (struct ArgusModelerStruct *, struct ip6_hdr *);
@@ -84,7 +83,7 @@ ArgusParseGeneve (struct ArgusModelerStruct *model, void *ptr)
    }
 
    if (STRUCTCAPTURED(model, *genhdr)) {
-      optlen = (genhdr->ver_opt & OPT_LEN_MASK) << 2;
+      optlen = (genhdr->ver_opt & HDR_OPTS_LEN_MASK) << 2;
       gen->ver_opt = genhdr->ver_opt;
       gen->flags = genhdr->flags;
       gen->ptype = retn = ntohs(genhdr->ptype);
